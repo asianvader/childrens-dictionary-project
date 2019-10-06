@@ -23,18 +23,32 @@ const apiKey = process.env.API_KEY;
 // take word from form 
 app.post('/search', (req, res, next) => {
     const searchedWord = req.body.search;
-    console.log(searchedWord);
     let callApiUrl = apiUrl + searchedWord + "?key=" + apiKey;
 
     // make request to API
     request.get(callApiUrl, {json:true}, (err, response, data) => {
-        if (err) {
+        if (err) { 
             return console.log(err);
+        } 
+        // check if the word exists in dictionary by existence of object in array
+        else if (data.some(value => typeof value == 'object')) {
+            const word = data[0].meta.id;
+            const category = data[0].fl;
+            const pronunciation = data[0].hwi.prs[0].mw;
+            const audio = data[0].hwi.prs[0].sound.audio;
+            const definition = data[0].shortdef[0];
+ 
+            // return data
+            res.json({
+                word: word,
+                category: category,
+                pronunciation: pronunciation,
+                definition: definition
+            })
+        } else {
+            res.send(data);
         }
-        let word = data;
-        console.log(data);
-        // return data
-        res.send(data)
+        
     })
 });
 
